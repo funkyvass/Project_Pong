@@ -1,12 +1,14 @@
+import random
+
 import pygame, sys
-from pygame import MOUSEBUTTONDOWN
+from pygame import MOUSEBUTTONDOWN, KEYDOWN
 
 from TextMaker import write
 from button import Button
 import TextMaker
 
 pygame.init()
-
+clock = pygame.time.Clock()
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -24,14 +26,109 @@ DARK_GRAY = (50, 50, 50)
 # Constants
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
-SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+CENTERx = SCREEN_WIDTH / 2
+CENTERy = SCREEN_HEIGHT / 2
+SCREEN = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
-
-def get_font(size):  # Returns Press-Start-2P in the desired size
+# GAME ELEMENTS
+#BALL
+ball_size = 50
+ball_radius = 10
+ball_speedx = 14
+ball_speedy = 14
+#PLAYER
+paddle_height = 140
+player_speed = 0
+opponent_speed = 15
+ai_fear_factor = 50
+def get_font(size):
     return pygame.font.Font("Materijali/8-bit-pusab.ttf", size)
 
 
-def Play():
+
+def Game_Logic():
+    global player_speed
+    ball = pygame.Rect(CENTERx - ball_size/2, CENTERy - ball_size/2, ball_size, ball_size)
+    player1 = pygame.Rect(SCREEN_WIDTH - 20, CENTERy - paddle_height/2, 10, paddle_height )
+    player2 = pygame.Rect(10, CENTERy - paddle_height / 2, 10, paddle_height)
+
+    def ballrestart():
+        global ball_speedx, ball_speedy
+        ball.center = (CENTERx - ball_size / 2, CENTERy - ball_size / 2)
+        ball_speedx *= random.choice((1, -1))
+        ball_speedy *= random.choice((1, -1))
+
+    
+    def ball_animation():
+        global ball_speedx, ball_speedy
+        ball.x += ball_speedx
+        ball.y += ball_speedy
+        # BOUNCE
+        if ball.top <= 0 or ball.bottom >= SCREEN_HEIGHT:
+            ball_speedy *= -1
+        if ball.left <= 0 or ball.right >= SCREEN_WIDTH:
+            ballrestart()
+
+        if ball.colliderect(player1) or ball.colliderect(player2):
+            ball_speedx *= -1
+
+
+    def player1_animation():
+        global player_speed
+        player1.y += player_speed
+        # BOUNCE
+        if player1.top <= 0:
+            player1.top = 0
+        if player1.bottom >= SCREEN_HEIGHT:
+            player1.bottom = SCREEN_HEIGHT
+
+    def opponent_ai_animation():
+        if player2.centery < ball.y + ai_fear_factor:
+            player2.top += opponent_speed
+        if player2.centery > ball.y - ai_fear_factor:
+            player2.bottom -= opponent_speed
+
+        if player2.top <= 0:
+            player2.top = 0
+        if player2.bottom >= SCREEN_HEIGHT:
+            player2.bottom = SCREEN_HEIGHT
+
+    while True:
+        SCREEN.fill(BLACK)
+        clock.tick(60)
+        MOUSE_POS = pygame.mouse.get_pos()
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
+                if event.key == pygame.K_DOWN:
+                    player_speed = 10
+                if event.key == pygame.K_UP:
+                    player_speed = -10
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_DOWN or event.key == pygame.K_UP:
+                    player_speed = 0
+
+        player1.y += player_speed
+        ball_animation()
+        player1_animation()
+        opponent_ai_animation()
+
+
+        # DRAW ITEMS
+        pygame.draw.circle(SCREEN, WHITE, (ball.x + ball_radius, ball.y + ball_radius), ball_radius)
+        pygame.draw.rect(SCREEN, WHITE, player1)
+        pygame.draw.rect(SCREEN, WHITE, player2)
+        pygame.draw.aaline(SCREEN, GRAY, (CENTERx,0), (CENTERx, SCREEN_HEIGHT))
+        pygame.display.flip()
+
+
+
+
+
+
+def PlayScreen():
     SCREEN.fill(BLACK)
     pygame.display.set_caption("Play")
     BACK_BT = Button(pos=(100, 50), text_input="Back", font=get_font(30),
@@ -156,7 +253,8 @@ def MainMenu():
                     sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if PLAY_BT.checkForInput(MOUSE_POS):
-                    Play()
+                    #PlayScreen()
+                    Game_Logic()
                 elif OPTIONS_BT.checkForInput(MOUSE_POS):
                     Options()
                 elif ABOUT_BT.checkForInput(MOUSE_POS):
