@@ -24,8 +24,9 @@ LIGHT_GRAY = (200, 200, 200)
 DARK_GRAY = (50, 50, 50)
 
 # Constants
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
+info = pygame.display.Info()
+SCREEN_WIDTH = info.current_w
+SCREEN_HEIGHT = info.current_h
 CENTERx = SCREEN_WIDTH / 2
 CENTERy = SCREEN_HEIGHT / 2
 SCREEN = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
