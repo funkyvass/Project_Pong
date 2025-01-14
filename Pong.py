@@ -23,6 +23,7 @@ GRAY = (128, 128, 128)
 LIGHT_GRAY = (200, 200, 200)
 DARK_GRAY = (50, 50, 50)
 
+#GO UCAM SIME
 # Constants
 info = pygame.display.Info()
 SCREEN_WIDTH = info.current_w
